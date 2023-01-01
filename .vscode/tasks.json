@@ -1,0 +1,49 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build ggbot",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "build",
+                ".",
+                "-t",
+                "ggbot"
+            ],
+            "dependsOn": [
+                "requirements"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/bot"
+            }
+        },
+        {
+            "label": "prune images",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "image",
+                "prune",
+                "-f"
+            ]
+        },
+        {
+            "label": "requirements",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "pip",
+                "freeze",
+                ">",
+                "requirements.txt"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/bot"
+            }
+        }
+    ]
+}
