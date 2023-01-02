@@ -1,0 +1,37 @@
+---
+version: "3.9"
+services:
+  bot:
+    container_name: ${BOT_CONTAINER_NAME}
+    restart: unless-stopped
+    image: galaga-group-bot
+    pull_policy: build
+    build: ./bot
+    ports:
+      - '${DEBUG_PORT}:5678'
+    depends_on:
+      - db
+    environment:
+      - GGB_DB_HOST=db
+      - GGB_DB_DATABASE=${GGB_DB_DATABASE}
+      - GGB_DB_USER=${GGB_DB_USER}
+      - GGB_DB_PASSWORD=${GGB_DB_PASSWORD}
+      - GGB_DISCORD_TOKEN=${GGB_DISCORD_TOKEN}
+
+  db:
+    container_name: ${DB_CONTAINER_NAME}
+    image: postgres:15.1-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${GGB_DB_DATABASE}
+      - POSTGRES_USER=${GGB_DB_USER}
+      - POSTGRES_PASSWORD=${GGB_DB_PASSWORD}
+    ports:
+      - '${DB_PORT}:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./bot/seed_database.sql:/docker-entrypoint-initdb.d/bootstrap.sql
+
+volumes:
+  db:
+    driver: local

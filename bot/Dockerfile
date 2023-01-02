@@ -11,6 +11,6 @@ RUN python -m pip install -r ./requirements.txt
 
 # Copy over the scripts for the bot.
 COPY galaga_group_bot.py ./
-#COPY galaga_group_bot_data.py ./
+COPY galaga_group_bot_data.py ./
 
 CMD [ "python", "./galaga_group_bot.py" ]

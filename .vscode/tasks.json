@@ -4,21 +4,63 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build ggbot",
+            "label": "compose up",
             "type": "shell",
             "command": "docker",
             "args": [
-                "build",
-                ".",
-                "-t",
-                "ggbot"
+                "compose",
+                "-p",
+                "discord-bot-dev",
+                "--env-file",
+                ".dev-env",
+                "up",
+                "-d",
+                "--no-deps",
+                "bot"
             ],
             "dependsOn": [
                 "requirements"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/bot"
+                "cwd": "${workspaceFolder}"
             }
+        },
+        {
+            "label": "compose first up",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "compose",
+                "-p",
+                "discord-bot-dev",
+                "-f",
+                "docker-compose.yml",
+                "--env-file",
+                ".dev-env",
+                "up",
+                "-d"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": [
+                "compose build"
+            ]
+        },
+        {
+            "label": "compose build",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "compose",
+                "-p",
+                "discord-bot-dev",
+                "build",
+                "--no-cache"
+            ],
+            "dependsOn": [
+                "requirements"
+            ]
         },
         {
             "label": "prune images",
@@ -28,7 +70,15 @@
                 "image",
                 "prune",
                 "-f"
-            ]
+            ],
+            "dependsOn": [
+                "compose up"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
             "label": "requirements",
@@ -44,6 +94,22 @@
             "options": {
                 "cwd": "${workspaceFolder}/bot"
             }
+        },
+        {
+            "label": "clean-hard",
+            "type": "shell",
+            "command": "docker",
+            "args": [
+                "compose",
+                "-p",
+                "discord-bot-dev",
+                "--env-file",
+                ".dev-env",
+                "down",
+                "-v",
+                "--rmi",
+                "all"
+            ]
         }
     ]
 }
