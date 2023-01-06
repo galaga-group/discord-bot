@@ -31,10 +31,7 @@ class galaga_group_bot_data():
 
     async def do_submission(self, user_id: int, category: str, score: int, evidence_link: str):
         async with self.pool.acquire() as conn:
-            try:
-                await conn.execute('SELECT do_submission($1, $2, $3, $4)', user_id, category, score, evidence_link)
-            except Exception as e:
-                print(e)
+            await conn.execute('SELECT do_submission($1, $2, $3, $4)', user_id, category, score, evidence_link)
     
     async def get_personal_best_scores(self, user_id: int):
         async with self.pool.acquire() as conn:

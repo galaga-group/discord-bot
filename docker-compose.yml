@@ -17,6 +17,7 @@ services:
       - GGB_DB_USER=${GGB_DB_USER}
       - GGB_DB_PASSWORD=${GGB_DB_PASSWORD}
       - GGB_DISCORD_TOKEN=${GGB_DISCORD_TOKEN}
+      - GGB_DEBUG_CHANNEL=${GGB_DEBUG_CHANNEL}
 
   db:
     container_name: ${DB_CONTAINER_NAME}
