@@ -12,10 +12,12 @@ print('Hello, world!')
 
 class galaga_group_bot(commands.Bot):
     data: galaga_group_bot_data
+    last_embed_msg: discord.Message
 
     def __init__(self, data: galaga_group_bot_data, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data = data
+        self.last_embed_msg = None
 
     async def setup_hook(self) -> None:
         return
@@ -34,6 +36,7 @@ class galaga_group_bot(commands.Bot):
             color = discord.Color.from_str('#252525'),
             description = ''
         )
+        
         embed.set_author(name=author.display_name, icon_url=author.avatar.url)
         scores = await self.data.get_personal_best_scores(db_user['id'])
         for score in scores:
@@ -45,6 +48,18 @@ async def log_to_debug_channel(ctx: commands.Context, e: Exception):
     debug_msg = '`{}` sent `{}` resulting in error:\n```\n{}\n```'.format(str(ctx.author), ctx.message.content, str(e))
     await debug_channel.send(debug_msg)
 
+# TODO - this function is too simple for more advanced bot use-cases
+# If there is more than one guild, or even one channel that the bot is used in this logic may result in unexpected behavior.
+# A simple improvement would be to track the most recent embeds based mapped by the channel the command is from.
+# That takes more work than just storing the most recent msg with an embed and checking some values though,
+# and for now the simple case of one guild + one channel is all we need.
+def embeds_match(ctx: commands.Context) -> bool:
+    bot = ctx.bot
+    return  bot.last_embed_msg != None and \
+            len(bot.last_embed_msg.embeds) > 0 and \
+            bot.last_embed_msg.embeds[0].author.name == ctx.author.display_name and \
+            bot.last_embed_msg.embeds[0].title == 'Player Card'
+                    
 async def main():
     async with await galaga_group_bot_data.create(
             host=       os.environ['GGB_DB_HOST'],
@@ -73,9 +88,12 @@ async def main():
                     return
                 await ctx.message.delete()
                 # Build the embed
-                # TODO - Track the most recent embed and if it belongs to the same user as the command being processed, edit it instead.
+                # TODO - the logic of "embeds_match" is too simple for more complex use-cases. See the function definition for more details.
                 embed = await bot.build_player_card_embed(db_user, ctx.author)
-                await ctx.send(embed=embed)
+                if embeds_match(ctx):
+                        await bot.last_embed_msg.edit(embed=embed)
+                else:
+                    bot.last_embed_msg = await ctx.send(embed=embed)
             
             @submit.error
             async def submit_error(ctx: commands.Context, error):
@@ -89,7 +107,11 @@ async def main():
                 try:
                     db_user = await bot.lookup_or_register_user(ctx.author)
                     embed = await bot.build_player_card_embed(db_user, ctx.author)
-                    await ctx.send(embed=embed)
+                    if embeds_match(ctx):
+                        await bot.last_embed_msg.edit(embed=embed)
+                    else:
+                        bot.last_embed_msg = await ctx.send(embed=embed)
+                    
                 except Exception as e:
                     await log_to_debug_channel(ctx, e)
 
